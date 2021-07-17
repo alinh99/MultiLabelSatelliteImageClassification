@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import numpy as np
 import torch
 from train_vgg16 import Net
@@ -5,6 +6,19 @@ from data_processing import test_dataloader, one_hot_encode, dict_data
 
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+=======
+# Validation loop
+import numpy as np
+import torch
+from torchvision import models
+from train_vgg16 import Net
+from data_processing import test_dataloader, one_hot_encode, dict_data
+# from ignite.engine import Engine
+# from ignite.metrics import Accuracy
+import torchmetrics
+
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+>>>>>>> 95bdc9944956fe4856054c4d92c4714baf1ac0da
 print(device)
 # model = models.vgg16(pretrained=True)
 model = Net()
@@ -13,6 +27,12 @@ model.load_state_dict(torch.load('satellite_vgg16_ver2.pth'))
 correct = 0
 total = 0
 acc = []
+<<<<<<< HEAD
+=======
+# tp = 0
+# fp = 0
+# fn = 0
+>>>>>>> 95bdc9944956fe4856054c4d92c4714baf1ac0da
 pre = []
 rec = []
 fbeta = []
@@ -28,13 +48,21 @@ def predict_norm(predict, threshold):
     return predict.astype(np.int)
 
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 95bdc9944956fe4856054c4d92c4714baf1ac0da
 # engine = Engine(process_function)
 
 model.to(device)
 
 with torch.no_grad():
     model.eval()
+<<<<<<< HEAD
     # Validation loop
+=======
+>>>>>>> 95bdc9944956fe4856054c4d92c4714baf1ac0da
     for data in test_dataloader:
         images, labels = data
         # calculate outputs by running images through the network
@@ -54,7 +82,12 @@ with torch.no_grad():
         correct += correct_template
         accuracy = correct / total
         print(f"Accuracy:{accuracy}")
+<<<<<<< HEAD
 
+=======
+        # y_pred = torch.clip(torch.FloatTensor(predicted), 0, 1)
+        # y_true = torch.clip(torch.FloatTensor(y_onehot, 0, 1))
+>>>>>>> 95bdc9944956fe4856054c4d92c4714baf1ac0da
         tp = correct_template
         tn = np.sum(np.logical_not(predicted) & y_onehot)
         fp = np.sum(np.logical_not(y_onehot) & predicted)
@@ -71,15 +104,22 @@ with torch.no_grad():
         # Calcuate fbeta, averaged across each class
         beta = 2
         bb = beta ** 2
+<<<<<<< HEAD
 
         fbeta_score = ((1 + bb) * precision * recall) / ((bb * precision) + recall)
         print(f"fbeta_score: {fbeta_score}")
         print(f"Correct: {correct}, Total: {total}")
 
+=======
+        fbeta_score = ((1 + bb) * precision * recall) / ((bb * precision) + recall)
+        print(f"fbeta_score: {fbeta_score}")
+        print(f"Correct: {correct}, Total: {total}")
+>>>>>>> 95bdc9944956fe4856054c4d92c4714baf1ac0da
         acc.append(accuracy)
         fbeta.append(fbeta_score)
         pre.append(precision)
         rec.append(recall)
+<<<<<<< HEAD
 
         print()
 
@@ -87,3 +127,11 @@ print('Accuracy of the network on the 10000 test images: %.2f' % (sum(acc) / len
 print('Recall of the network on the 10000 test images: %.2f' % (sum(rec) / len(rec)))
 print('Precision of the network on the 10000 test images: %.2f' % (sum(pre) / len(pre)))
 print('F-score of the network on the 10000 test images: %.2f' % (sum(fbeta) / len(fbeta)))
+=======
+        print()
+print('Accuracy of the network on the 10000 test images: %.2f' % (sum(acc) / len(acc)))
+print('Recall of the network on the 10000 test images: %.2f' % (sum(rec) / len(rec)))
+print('Precision of the network on the 10000 test images: %.2f' % (sum(pre) / len(pre)))
+print('F-score of the network on the 10000 test images: %.2f' % (sum(fbeta) / len(fbeta)))
+
+>>>>>>> 95bdc9944956fe4856054c4d92c4714baf1ac0da
