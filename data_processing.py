@@ -1,20 +1,15 @@
 import os
-import time
-
 import cv2
 import numpy as np
 import pandas as pd
 import torch
 import torchvision.io
 from matplotlib import pyplot as plt
-
-
 from torchvision import transforms
-
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-
-print(torch.__version__)
+from PIL import Image
+from torch.utils.tensorboard import SummaryWriter
 
 
 class CustomImageDataset(Dataset):
@@ -29,11 +24,14 @@ class CustomImageDataset(Dataset):
 
     def __getitem__(self, idx):
         img_path = os.path.join(self.img_dir, self.img_labels.iloc[idx, 0])
-        image = cv2.imread(img_path + ".jpg", cv2.IMREAD_COLOR)
-        # image = cv2.resize(image, (224, 224))
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.uint8)
-        tran = transforms.ToTensor()
+        image = Image.fromarray(cv2.imread(img_path + ".jpg"))
+        # tran = transforms.ToTensor()
+        tran = transforms.Compose([
+            transforms.Resize(128),
+            transforms.CenterCrop(128),
+            transforms.ToTensor()])
         image = tran(image)
+        # image = image.unsqueeze(0)
         label = self.img_labels.iloc[idx, 1]
         if self.transform:
             image = self.transform(image)
@@ -57,11 +55,8 @@ def create_tag_mapping(mapping_csv):
     labels.sort()
     # dict that maps labels to integers, and the reverse
     labels_map = {labels[i]: i for i in range(len(labels))}
-    inv_labels_map = {i: labels[i] for i in range(len(labels))}
+    # inv_labels_map = {i: labels[i] for i in range(len(labels))}
     return labels_map
-
-
-dict_data = create_tag_mapping(pd.read_csv("train_v2.csv"))
 
 
 # create a mapping of filename to a list of tags
@@ -94,30 +89,41 @@ def imshow(img):
     plt.show()
 
 
+dict_data = create_tag_mapping(pd.read_csv("train_v2.csv"))
 df_data = pd.read_csv('train_v2.csv')
 
-df_train = df_data[:round(0.8 * len(df_data))]
-df_val = df_data[round(0.8 * len(df_train)):]
+# Split to train and test
+df_train = df_data[:round(0.7 * len(df_data))]
+df_val = df_data[round(0.7 * len(df_train)):]
+
+# cuda or cpu
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-print('Using {} device'.format(device))
+# print('Using {} device'.format(device))
+
 batch_size = 128
-training_data = CustomImageDataset(annotations_file=df_train, img_dir='train-jpg/train-jpg/')
-testloader = CustomImageDataset(annotations_file=df_val, img_dir='train-jpg/train-jpg/')
-# print(training_data)
+
+# Load train and test image dataset
+training_data = CustomImageDataset(annotations_file=df_train, img_dir='train-jpg/')
+testing_data = CustomImageDataset(annotations_file=df_val, img_dir='train-jpg/')
+
 train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
-test_dataloader = DataLoader(testloader, batch_size=batch_size, shuffle=True)
-# print(train_dataloader)
+test_dataloader = DataLoader(testing_data, batch_size=batch_size, shuffle=True)
+
 # get some random training images
 dataiter = iter(train_dataloader)
 images, labels = dataiter.next()
 
 # show images
-imshow(torchvision.utils.make_grid(images))
-print(' '.join('%5s' % [labels[j]] for j in range(batch_size)))
+img_grid = torchvision.utils.make_grid(images)
+imshow(img_grid)
+# print(images.shape)
+# print(f"Feature batch shape: {images.size()}")
+# show images
+# print(' '.join('%5s' % [labels[j]] for j in range(batch_size)))
 
 
+# default `log_dir` is "runs" - we'll be more specific here
+writer = SummaryWriter('runs/fashion_mnist_experiment_1')
 
-
-# model = torch.hub.load('pytorch/vision:v0.9.0', 'resnet18', pretrained=True)
-# model.eval()
-
+# write to tensorboard
+writer.add_image('four_fashion_mnist_images', img_grid)
